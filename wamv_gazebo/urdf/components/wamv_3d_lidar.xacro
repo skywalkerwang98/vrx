@@ -15,7 +15,7 @@
     samples: number of samples during spin, higher is more dense but slows down simulation
     resolution: This number is multiplied by samples to determine the number of range data points returned.
     min_angle: the horizontal angle that the scan begins at
-    max_angle: the angle that the scan ends at
+    min_angle: the angle that the scan ends at
     min_vertical_angle: the angle of the lowest vertical beam
     max_vertical_angle: the angle of the highest vertical beam
     max_range: maximum distance for an object to be detected by laser
@@ -28,7 +28,8 @@
                                             update_rate:=10 vertical_lasers:=16 samples:=1875 resolution:=0.1
                                             min_angle:=${-pi} max_angle:=${pi}
                                             min_vertical_angle:=${-pi/12} max_vertical_angle:=${pi/12}
-                                            max_range:=130 noise_stddev:=0.01">
+                                            max_range:=130 noise_stddev:=0.01
+                                            sensor_type=0">
     <!-- Define length variables for link positioning -->
     <xacro:property name="platform_z" value="${post_z_from}"/>
     <xacro:property name="post_to_post_arm_x" value="0.03"/>
@@ -143,6 +144,9 @@
       <child link="${namespace}/${name}_link" />
     </joint>
 
+    <!-- 0 for pointcloud2 3d-lidar, 1 for laserscan 2d-lidar. -->
+    <!-- TODO: seperate the 2d and 3d lidar in different files. -->
+    <xacro:if value="${sensor_type == 0}">
     <gazebo reference="${namespace}/${name}_link">
       <sensor type="gpu_ray" name="${name}_sensor">
         <update_rate>${update_rate}</update_rate>
@@ -178,6 +182,38 @@
         </plugin>
       </sensor>
     </gazebo>
+    </xacro:if>
+    <xacro:if value="${sensor_type == 1}">
+    <gazebo reference="${namespace}/${name}_link">
+      <sensor type="gpu_ray" name="${name}_sensor">
+        <update_rate>${update_rate}</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>${samples/resolution}</samples>
+              <resolution>${resolution}</resolution>
+              <min_angle>${min_angle}</min_angle>
+              <max_angle>${max_angle}</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.15</min>
+            <max>${max_range}</max>
+            <resolution>0.015</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>${noise_stddev}</stddev>
+          </noise>
+        </ray>
+        <plugin name="${name}_plugin" filename="libgazebo_ros_gpu_laser.so">
+          <topicName>${namespace}/${sensor_namespace}lidars/${name}/scan</topicName>
+          <frameName>${namespace}/${name}_link</frameName>
+        </plugin>
+      </sensor>
+    </gazebo>    
+    </xacro:if>
 
     <!-- Set color of post -->
     <gazebo reference="${namespace}/${name}_post_link">

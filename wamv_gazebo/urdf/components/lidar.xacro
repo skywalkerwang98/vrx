@@ -26,5 +26,20 @@
                            min_vertical_angle="-0.186"
                            max_vertical_angle="0.54"/>
     </xacro:if>
+    <xacro:if value="${type == '1_beam'}">
+      <xacro:wamv_3d_lidar name="${name}"
+                           x="${x}" y="${y}" z="${z}"
+                           R="${R}" P="${P}" Y="${Y}"
+                           post_Y="${post_Y}" post_z_from="${post_z_from}"
+                           vertical_lasers="1"
+                           samples="90"
+                           resolution="1"
+                           max_range="15"
+                           update_rate="5"
+                           sensor_type="1"
+                           min_angle="${-pi/2}"
+                           max_angle="${pi/2}"
+                           />
+  </xacro:if>
   </xacro:macro>
 </robot>
